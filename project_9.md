@@ -123,3 +123,6 @@ Now, let make some change in any file in our GitHub repository (e.g. README.MD f
 
 You will see that a new build has been launched automatically (by webhook) and you can see its `results – artifacts, saved on Jenkins server`.
 
+By default, the artifacts are stored on Jenkins server locally
+
+`ls /var/lib/jenkins/jobs/tooling_github/builds/<build_number>/archive/`
