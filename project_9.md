@@ -1,6 +1,7 @@
 ## **TOOLING WEBSITE DEPLOYMENT AUTOMATION WITH CONTINUOUS INTEGRATION. INTRODUCTION TO JENKINS**
 ---
 ---
+
 </br>
 
 ### **INSTALL AND CONFIGURE JENKINS SERVER**
@@ -49,6 +50,8 @@ From your browser access
 
 `http://<Jenkins-Server-Public-IP-Address-or-Public-DNS-Name>:8080`
 
+</br>
+
 ![getting-started](./images-project9/geting-started.PNG)
 
 You will be prompted to provide a default admin password
@@ -66,6 +69,9 @@ Once plugins installation is done – create an admin user and we will get the J
 </br>
 
 ![jenkins](./images-project9/jenkins.PNG)
+
+---
+---
 
 </br>
 
@@ -95,9 +101,18 @@ To connect your GitHub repository, we will need to provide its URL, we can copy 
 
 In configuration of `Jenkins freestyle project` choose `Git repository`, provide there the link to the Tooling GitHub repository and credentials (user/password) so Jenkins could access files in the repository.
 
+Note: Set `Branch Specifier (blank for 'any')?`  to 
+
+`**/main` 
+
+to mach the `master branche` name in github.
+
+
 `Save the configuration` and let us try to run the build. For now we can only do it manually.
 
-![git-url](./images-project9/git-url.PNG)
+</br>
+
+![git-url](./images-project9/branch%20specifier.PNG)
 
 Click `"Build Now"` button, if you have configured everything correctly, the build will be successfull and you will see it under #1
 
@@ -119,10 +134,87 @@ This build does not produce anything and it runs only when we trigger it manuall
 
 ![post-build](./images-project9/post-build.PNG)
 
+</br>
 Now, let make some change in any file in our GitHub repository (e.g. README.MD file) and push the changes to the master branch.
 
-You will see that a new build has been launched automatically (by webhook) and you can see its `results – artifacts, saved on Jenkins server`.
+We will see that a new build has been launched automatically (by webhook) and we can see its `results – artifacts, saved on Jenkins server`.
+
+</br>
+
+![webhook-jenkins](./images-project9/jenkins-webhook.PNG)
 
 By default, the artifacts are stored on Jenkins server locally
 
 `ls /var/lib/jenkins/jobs/tooling_github/builds/<build_number>/archive/`
+
+---
+---
+</br>
+
+### **Step-3 CONFIGURE JENKINS TO COPY FILES TO NFS SERVER VIA SSH**
+
+</br>
+
+1. **Install "Publish Over SSH" plugin.**
+   
+   On main dashboard select "Manage Jenkins" and choose "Manage Plugins" menu item.
+
+   On `"Available"` tab search for `"Publish Over SSH" plugin` and install it
+
+</br>
+
+   ![push-ssh](./images-project9/push-ssh.PNG)
+
+2. **Configure the job/project to copy artifacts over to NFS server.**
+   
+   On main dashboard select `"Manage Jenkins" `and choose `"Configure System"` menu item.
+
+   Scroll down to `Publish over SSH plugin` configuration section and configure it to be able to connect to your NFS server:
+
+   1. Provide a `private key` (content of .pem file that you use to connect to NFS server via SSH/Putty)
+   
+   2. `Arbitrary name`
+
+   3. `Hostname `– can be private IP address of your NFS server
+   
+   4. `Username – ec2-user `(since NFS server is based on EC2 with RHEL 8)
+
+   5. `Remote directory – /mnt/apps` since our Web Servers use it as a mounting point to retrieve files from the NFS server
+ 
+![publish-over-ssh](./images-project9/publish-over-ssh.PNG)
+
+![publish-over-ssh](./images-project9/publish-over-ssh2.PNG)
+
+3. `Test the configuration` and make sure the connection returns Success. Remember, that `TCP port 22 `on `NFS server` must be open to receive SSH connections.
+
+![configuration-test](./images-project9/configuration-test.PNG)
+
+`Save the configuration,` open your Jenkins job/project configuration page and `add` another one `"Post-build Action"`:
+
+`"Send build artifacts over SSH"`
+
+![send-build-artifacts](./images-project9/send-build-artifacts.PNG)
+
+</br>
+
+Configure it to `send all files probuced by the build` into our previouslys define remote directory. In our case we want to copy all files and directories – so we use : `**`
+
+![send-files](./images-project9/send-files.PNG)
+
+If you want to apply some particular pattern to define which files to send – use this syntax.
+
+Save this configuration and go ahead, change something in `README.MD file in your GitHub` Tooling repository.
+
+`Webhook will trigger` a new job and in the `"Console Output"` of the job you will find something like this:
+
+      SSH: Transferred 25 file(s)
+      Finished: SUCCESS
+
+</br>
+
+![NFS-connection](./images-project9/NFS%20connection.PNG)
+To make sure that the files in `/mnt/apps` have been udated – connect via `SSH/Putty` to your NFS server and check `README.MD` file
+
+`cat /mnt/apps/README.md`
+
+![readme-updated](./images-project9/readme-updated.PNG)
