@@ -9,5 +9,11 @@ Acording to Circle CI, Continuous integration (CI) is a software development str
 
 In our project we are going to utilize Jenkins CI capabilities to make sure that every change made to the source code in GitHub https://github.com/<yourname>/tooling will be automatically be updated to the Tooling Website.
   
+  Task
+Enhance the architecture prepared in Project 8 by adding a Jenkins server, configure a job to automatically deploy source codes changes from Git to NFS server.
 
-# test jenkins
+Here is how your updated architecture will look like upon competion of this project:
+
+
+ ### "test jenkins" 
+  ### if you can read this file that means Jenkins files transfer to NFS server is working
